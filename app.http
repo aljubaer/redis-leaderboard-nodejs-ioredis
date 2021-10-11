@@ -4,8 +4,12 @@
 
 GET {{baseURL}}
 
+###
+POST {{baseURL}}/api/leaderboard/432a3/2000
 
-GET {{baseURL}}/api/leaderboard/
 
 ###
-POST {{baseURL}}/api/leaderboard/432a1/100
+GET {{baseURL}}/api/leaderboard
+
+###
+GET {{baseURL}}/api/leaderboard/rank/432a1

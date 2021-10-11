@@ -10,23 +10,29 @@ const PORT = process.env.PORT || 5000;
 
 const SET_KEY = 'LEADERBOARD';
 
-function arrayToJsonResponse (array) {
-    let jsonResponse = {};
+function formatResponse (array) {
+    let response = [];
     for (let i = 0; i < array.length; i++) {
-        if (i % 2) jsonResponse[array[i-1]] = array[i];
+        if (i % 2) { 
+            response.push({
+                id: array[i-1],
+                rank: parseInt(i / 2 + 1), 
+                score: array[i]
+            })
+        }
     }
-    return jsonResponse;
+    return response;
 }
 
 app.get("/api", (req, res) => {
     res.sendStatus(200);
 });
 
-app.get('/api/leaderboard/:rank', async (req, res) => {
-    const rank = req.params.rank;
+app.get('/api/leaderboard/rank/:id', async (req, res) => {
+    const id = req.params.id;
 
     try {
-        const result = await redis.zrank(SET_KEY, rank);
+        const result = await redis.zrevrank(SET_KEY, id);
 
         res.status(200).json(result);
     } catch (error) {
@@ -38,22 +44,23 @@ app.get('/api/leaderboard', async (req, res) => {
     try {
         const results = await redis.zrevrange(SET_KEY, 0, -1, "WITHSCORES");
 
-        res.status(200).json(arrayToJsonResponse(results));
+        res.status(200).json(formatResponse(results));
     } catch (error) {
         res.sendStatus(500);
     }
 });
 
-app.post('/api/leaderboard/:rank/:score', async (req, res) => {
-    const rank = req.params.rank;
+app.post('/api/leaderboard/:id/:score', async (req, res) => {
+    const id = req.params.id;
     const score = +req.params.score;
 
     try {
-        await redis.zadd(SET_KEY, score, rank);
+        await redis.zadd(SET_KEY, score, id);
         const results = await redis.zrevrange(SET_KEY, 0, -1, "WITHSCORES");
 
-        res.status(201).json(arrayToJsonResponse(results));
+        res.status(201).json(formatResponse(results));
     } catch (error) {
+        console.log(error);
         res.sendStatus(500);
     }
 });
